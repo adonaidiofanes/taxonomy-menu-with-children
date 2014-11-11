@@ -4,7 +4,7 @@
   /*
   * Generate URL according with termID
   */
-  function generateLink($term){
+  function generateLinkChildren($term){
     
     global $base_path;
 
@@ -19,22 +19,30 @@
     return $link;
   }
 
+  /*
+  * Generate link of parents, add # 
+  */
+  function generateLinkParent($term){
+    $link = "<a href='#'>" . $term->name . "</a>";
+    return $link;
+  }
+
   $taxonomyName = 'categorias_de_olho_na_ciencia';
   $vocabulary = taxonomy_vocabulary_machine_name_load($taxonomyName);
   $tree = taxonomy_get_tree($vocabulary->vid);
 
   foreach ($tree as $term) {
     if($term->parents[0] == 0){
-      echo '<li class="pai pai-'.$term->tid.'">';
+      echo '<li class="primary-level primary-level-'.$term->tid.'">';
 
-      echo generateLink($term);
+      echo generateLinkParent($term);
 
       // Detect children of term
       $children = taxonomy_get_children($term->tid);
       // Browsing the children
       echo '<ul class="children">';
       foreach ($children as $f) {
-        echo '<li>'. generateLink($f) . '</li>';
+        echo '<li>'. generateLinkChildren($f) . '</li>';
       }
       echo "</ul>";
       echo '</li>';
