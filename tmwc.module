@@ -1,0 +1,148 @@
+<?php
+/**
+ * @file
+ * Taxonomy menu with children
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function tmwc_menu() {
+
+  $items['admin/config/tmwc'] = array(
+    'title' => "Taxonomy menu children",
+    'description' => "Adjusts the module Taxonomy menu with children.",
+    'position' => 'right',
+    'weight' => -5,
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => array('administer site configuration'),
+    'file path' => drupal_get_path('module', 'system'),
+    'file' => 'system.admin.inc',
+  );
+
+  $items['admin/config/tmwc/settings'] = array(
+    'title' => 'Settings',
+    'description' => "Configuration of Taxonomy menu with children",
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('tmwc_admin_settings'),
+    'access arguments' => array('administer site configuration'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'tmwc.admin.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_page_build().
+ */
+function tmwc_page_build(&$page) {
+
+  // Applies the bar only on non-administrative paths.
+  if (path_is_admin(current_path())) {
+    return;
+  }
+
+  $basepath = drupal_get_path('module', 'tmwc');
+
+
+}
+
+/*
+* Implements hook_block_info()
+*/
+function tmwc_block_info(){
+
+  $blocks = array();
+
+  // Generate blocks of taxonomies
+  $load_block = variable_get('tmwc_taxonomies');
+
+  if(is_array($load_block) && (!empty($load_block)) ){
+    foreach ($load_block as $taxonomy) {
+      $vocabulary = taxonomy_vocabulary_machine_name_load($taxonomy);
+      $block_name = "tmwc_" . $vocabulary->vid;
+      $blocks[$block_name] = array(
+        'info' => t("Taxonomy Menu Children: " . $vocabulary->name),
+      );
+    }
+  }
+
+  return $blocks;
+}
+
+/*
+* Implements hook_block_view()
+*/
+function tmwc_block_view($block_key){
+  $block = array();
+
+  if($block_key == 'tmwc_3'){
+    
+    $vid = explode("_", $block_key);
+    $vid = $vid[1];
+
+    $block['subject'] = t('Dizicutes');
+    $block['content'] = _body_tmwc($vid);
+
+  }
+
+  return $block;
+}
+
+
+/*
+* Generate URL according with termID
+*/
+function _generateLinkChildren($term){
+  
+  global $base_path;
+
+  $term_uri = taxonomy_term_uri($term); // get array with path
+  $term_path = $term_uri['path'];
+  $contar = explode("/", drupal_get_path_alias($term_path));
+  for($x=0;$x<count($contar);$x++){
+    $retorno = $contar[$x];
+  }
+  
+  $link = "<a href='" . $base_path . 'ciencia/area/' . $retorno . "' title='".$term->name."'>" . $term->name . "</a>";
+  return $link;
+}
+
+/*
+* Generate link of parents, add # 
+*/
+function _generateLinkParent($term){
+  $link = "<a href='#'>" . $term->name . "</a>";
+  return $link;
+}
+
+/*
+* Generate body for content of block
+*/
+function _body_tmwc($vid){
+  $tree = taxonomy_get_tree($vid);
+
+  $return = "<ul id='tmwc-menu-".$vid."'>";
+  foreach ($tree as $term) {
+    if($term->parents[0] == 0){
+      $return .= '<li class="primary-level primary-level-'.$term->tid.'">';
+
+      $return .= _generateLinkParent($term);
+
+      // Detect children of term
+      $children = taxonomy_get_children($term->tid);
+      // Browsing the children
+      $return .= '<ul class="children">';
+      foreach ($children as $f) {
+        $return .= '<li>'. _generateLinkChildren($f) . '</li>';
+      }
+      $return .= "</ul>";
+      $return .= '</li>';
+    }
+  }
+
+  $return .= "</ul>";
+
+  return $return;
+}

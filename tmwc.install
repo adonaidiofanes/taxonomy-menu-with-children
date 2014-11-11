@@ -1,0 +1,26 @@
+<?php
+/**
+ * @file
+ * Install functions for Taxonomy menu with children module.
+ */
+
+/**
+ * Implements hook_enable().
+ */
+function tmwc_enable() {
+
+  $message = t('The "Taxonomy menu with children" module was successfully enabled.');
+  drupal_set_message($message, 'status');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function tmwc_uninstall() {
+
+  variable_del('tmwc_option');
+
+  // Logs the uninstall message.
+  watchdog('Taxonomy menu with children', 'Uninstalling module and deleting fields');
+
+}

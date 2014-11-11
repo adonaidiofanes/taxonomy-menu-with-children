@@ -1,0 +1,7 @@
+name = Taxonomy menu with children
+description = "This module creates a block that contains a menu with the taxonomies and their children."
+package = Custom
+core = 7.x
+dependencies[] = taxonomy
+configure = admin/config/tmwc/settings
+version = 7.x-1.0-beta
