@@ -42,10 +42,6 @@ function tmwc_page_build(&$page) {
   if (path_is_admin(current_path())) {
     return;
   }
-
-  $basepath = drupal_get_path('module', 'tmwc');
-
-
 }
 
 /*
@@ -76,20 +72,47 @@ function tmwc_block_info(){
 */
 function tmwc_block_view($block_key){
   $block = array();
+  $categories = array();
 
-  if($block_key == 'tmwc_3'){
-    
-    $vid = explode("_", $block_key);
-    $vid = $vid[1];
+  // Get taxonomies for generate a block
+  $load_block = variable_get('tmwc_taxonomies');
 
-    $block['subject'] = t('Dizicutes');
-    $block['content'] = _body_tmwc($vid);
-
+  if(is_array($load_block) && (!empty($load_block)) ){
+    foreach ($load_block as $taxonomy) {
+      $vocabulary = taxonomy_vocabulary_machine_name_load($taxonomy);
+      $block_name = "tmwc_" . $vocabulary->vid;
+      array_push($categories, $block_name);
+    }
   }
+
+  // Add all taxonomies in foreach for apply template of menu
+  foreach ($categories as $taxonomy) {
+    if($block_key == $taxonomy){
+      $vid = explode("_", $block_key);
+      $vid = $vid[1];
+
+      $block['content'] = array(
+        '#markup' => _body_tmwc($vid),
+      );
+
+    }
+  }
+
+  // Add js of module
+  drupal_add_js(drupal_get_path('module', 'tmwc') . '/js/global.js', array(
+    'type' => 'file',
+    'scope' => 'footer',
+    'cache' => TRUE,
+  ));
+
+  // Add css of module
+  drupal_add_css(drupal_get_path('module', 'tmwc') . '/css/global.css', array(
+    'type' => 'file',
+    'group' => CSS_THEME,
+  ));
 
   return $block;
 }
-
 
 /*
 * Generate URL according with termID
@@ -105,7 +128,7 @@ function _generateLinkChildren($term){
     $retorno = $contar[$x];
   }
   
-  $link = "<a href='" . $base_path . 'ciencia/area/' . $retorno . "' title='".$term->name."'>" . $term->name . "</a>";
+  $link = "<a href='" . $base_path . 'ciencia/area/' . $retorno . "' title='".$term->name."'><span>" . $term->name . "</span></a>";
   return $link;
 }
 
@@ -113,7 +136,7 @@ function _generateLinkChildren($term){
 * Generate link of parents, add # 
 */
 function _generateLinkParent($term){
-  $link = "<a href='#'>" . $term->name . "</a>";
+  $link = "<a href='#'><span>" . $term->name . "</span></a>";
   return $link;
 }
 
@@ -123,10 +146,13 @@ function _generateLinkParent($term){
 function _body_tmwc($vid){
   $tree = taxonomy_get_tree($vid);
 
-  $return = "<ul id='tmwc-menu-".$vid."'>";
+  $return = "<div class='tmwc-menu'>";
+  $return .= "<ul id='tmwc-menu-".$vid."'>";
+  $return .= "<li class='active'><a href='#'><span>" . t('Categorias') . "</span></a></li>";
+
   foreach ($tree as $term) {
     if($term->parents[0] == 0){
-      $return .= '<li class="primary-level primary-level-'.$term->tid.'">';
+      $return .= '<li class="has-sub primary-level-'.$term->tid.'">';
 
       $return .= _generateLinkParent($term);
 
@@ -142,7 +168,7 @@ function _body_tmwc($vid){
     }
   }
 
-  $return .= "</ul>";
+  $return .= "</ul></div>";
 
   return $return;
 }
