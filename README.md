@@ -12,7 +12,7 @@ I used the menu displayed on the right sidebar.
 
 The style and javascript were leveraged of [CSSMenumaker][1]
 
-### Demon
+### Demo
 ![Demo](images/demo.png)
 
 [1]: http://cssmenumaker.com/menu/modern-jquery-accordion-menu
